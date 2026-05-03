@@ -47,16 +47,21 @@ if(WITH_BOOST_TEST)
 endif()
 
 if(WITH_GOOGLE_TEST)
-    find_package(GTest REQUIRED)
+    find_package(GTest QUIET)
+
+    if(NOT TARGET GTest::gtest)
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third-party/googletest/CMakeLists.txt")
+            add_subdirectory(third-party/googletest EXCLUDE_FROM_ALL)
+        else()
+            message(FATAL_ERROR "GoogleTest not found: neither system package nor third-party/googletest is available")
+        endif()
+    endif()
+
     add_executable(test_version_google test_version_google.cpp)
 
     set_target_properties(test_version_google PROPERTIES
         CXX_STANDARD 14
         CXX_STANDARD_REQUIRED ON
-    )
-
-    target_include_directories(test_version_google PRIVATE
-        ${GTEST_INCLUDE_DIRS}
     )
 
     target_link_libraries(test_version_google PRIVATE
