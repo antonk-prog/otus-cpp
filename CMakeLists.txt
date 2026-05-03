@@ -6,6 +6,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(helloworld VERSION ${PROJECT_VERSION})
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
+option(WITH_GOOGLE_TEST "Whether to build Google test" ON)
 
 configure_file(version.h.in version.h)
 
@@ -27,20 +28,40 @@ target_link_libraries(helloworld_cli PRIVATE
 
 if(WITH_BOOST_TEST)
     find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-    add_executable(test_version test_version.cpp)
+    add_executable(test_version_boost test_version_boost.cpp)
 
-    set_target_properties(test_version PROPERTIES
+    set_target_properties(test_version_boost PROPERTIES
         CXX_STANDARD 14
         CXX_STANDARD_REQUIRED ON
     )
 
-    set_target_properties(test_version PROPERTIES
+    set_target_properties(test_version_boost PROPERTIES
         COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
         INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
     )
 
-    target_link_libraries(test_version
+    target_link_libraries(test_version_boost
         ${Boost_LIBRARIES}
+        helloworld
+    )
+endif()
+
+if(WITH_GOOGLE_TEST)
+    find_package(GTest REQUIRED)
+    add_executable(test_version_google test_version_google.cpp)
+
+    set_target_properties(test_version_google PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    target_include_directories(test_version_google PRIVATE
+        ${GTEST_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(test_version_google PRIVATE
+        GTest::gtest
+        GTest::gtest_main
         helloworld
     )
 endif()
@@ -53,7 +74,12 @@ if (MSVC)
         /W4
     )
     if(WITH_BOOST_TEST)
-        target_compile_options(test_version PRIVATE
+        target_compile_options(test_version_boost PRIVATE
+            /W4
+        )
+    endif()
+    if(WITH_GOOGLE_TEST)
+        target_compile_options(test_version_google PRIVATE
             /W4
         )
     endif()
@@ -65,7 +91,12 @@ else ()
         -Wall -Wextra -pedantic -Werror
     )
     if(WITH_BOOST_TEST)
-        target_compile_options(test_version PRIVATE
+        target_compile_options(test_version_boost PRIVATE
+            -Wall -Wextra -pedantic -Werror
+        )
+    endif()
+    if(WITH_GOOGLE_TEST)
+        target_compile_options(test_version_google PRIVATE
             -Wall -Wextra -pedantic -Werror
         )
     endif()
@@ -82,5 +113,10 @@ include(CPack)
 
 if(WITH_BOOST_TEST)
     enable_testing()
-    add_test(test_version test_version)
+    add_test(test_version_boost test_version_boost)
+endif()
+
+if(WITH_GOOGLE_TEST)
+    enable_testing()
+    add_test(test_version_google test_version_google)
 endif()
