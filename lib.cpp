@@ -3,5 +3,5 @@
 #include "version.h"
 
 int version() {
-	return 0;
+	return PROJECT_VERSION_PATCH;
 }
