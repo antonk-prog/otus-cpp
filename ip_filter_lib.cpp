@@ -26,4 +26,27 @@ namespace ip_filter
 
         return r;
     }
+
+    bool compare_desc(std::vector<std::string> lhs, std::vector<std::string> rhs)
+    {
+        auto lhs_begin = lhs.cbegin();
+        auto rhs_begin = rhs.cbegin();
+        while (lhs_begin != lhs.cend() && rhs_begin != rhs.cend())
+        {
+            if (std::stoi(*lhs_begin) > std::stoi(*rhs_begin))
+            {
+                return true;
+            }
+            else if (*lhs_begin == *rhs_begin)
+            {
+                lhs_begin++;
+                rhs_begin++;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return false;
+    }
 }

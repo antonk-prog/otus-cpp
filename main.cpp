@@ -1,11 +1,37 @@
 #include "patch_lib.h"
 #include "ip_filter_lib.h"
 #include <iostream>
+#include <algorithm>
+
+namespace
+{
+	void print_ip(const std::vector<std::string> &ip)
+	{
+		bool first = true;
+		for (const auto &ip_part : ip)
+		{
+			if (!first)
+			{
+				std::cout << ".";
+			}
+			first = false;
+			std::cout << ip_part;
+		}
+		std::cout << "\n";
+	}
+	void print_ip_pool(const std::vector<std::vector<std::string>> &ip_pool)
+	{
+		for (const auto &ip : ip_pool)
+		{
+			print_ip(ip);
+		}
+	}
+}
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 {
 	using namespace ip_filter;
-	std::cout << "build " << version() << std::endl;
+	// std::cout << "build " << version() << std::endl;
     try
     {
         std::vector<std::vector<std::string> > ip_pool;
@@ -18,21 +44,33 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 
         // TODO reverse lexicographically sort
 
-        for (const auto& ip : ip_pool)
-        {
-            bool first = true;
-            for (const auto& ip_part : ip)
-            {
-                if (!first)
-                {
-                    std::cout << ".";
+		std::sort(ip_pool.begin(), ip_pool.end(), compare_desc);
 
-                }
-                first = false;
-                std::cout << ip_part;
-            }
-            std::cout << "\n";
-        }
+		print_ip_pool(ip_pool);
+
+		for (const auto& ip : ip_pool)
+		{
+			if (ip[0] == "1")
+			{
+				print_ip(ip);
+			}
+		}
+
+		for (const auto& ip: ip_pool)
+		{
+			if (ip[0] == "46" && ip[1] == "70")
+			{
+				print_ip(ip);
+			}
+		}
+		
+		for (const auto& ip: ip_pool)
+		{
+			if (ip[0] == "46" || ip[1] == "46" || ip[2] == "46" || ip[3] == "46")
+			{
+				print_ip(ip);
+			}
+		}
 
         // 222.173.235.246
         // 222.130.177.64
