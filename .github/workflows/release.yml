@@ -9,7 +9,7 @@ on:
     branches:
       - master
       - feature/github_actions
-      - hw_2_auto_labmda_tuple
+      - hw_2_auto_lambda_tuple
 
 jobs:
   build:
