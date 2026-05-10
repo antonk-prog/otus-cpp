@@ -1,5 +1,8 @@
 #include "ip_filter_lib.h"
 
+#include <algorithm>
+#include <stdexcept>
+
 // ("",  '.') -> [""]
 // ("11", '.') -> ["11"]
 // ("..", '.') -> ["", "", ""]
@@ -27,26 +30,81 @@ namespace ip_filter
         return r;
     }
 
-    bool compare_desc(std::vector<std::string> lhs, std::vector<std::string> rhs)
+    bool parse_ip(const std::string &line, ip_t &ip)
     {
-        auto lhs_begin = lhs.cbegin();
-        auto rhs_begin = rhs.cbegin();
-        while (lhs_begin != lhs.cend() && rhs_begin != rhs.cend())
+        const auto parts = split(line, '.');
+        if (parts.size() != ip.size())
         {
-            if (std::stoi(*lhs_begin) > std::stoi(*rhs_begin))
+            throw std::invalid_argument("invalid ip address format");
+        }
+
+        for (std::size_t index = 0; index < ip.size(); ++index)
+        {
+            const auto &part = parts[index];
+            if (part.empty())
             {
-                return true;
+                throw std::invalid_argument("invalid ip address format");
             }
-            else if (*lhs_begin == *rhs_begin)
+
+            std::size_t parsed = 0;
+            const int value = std::stoi(part, &parsed);
+            if (parsed != part.size() || value < 0 || value > 255)
             {
-                lhs_begin++;
-                rhs_begin++;
+                throw std::invalid_argument("invalid ip address format");
             }
-            else
+
+            ip[index] = value;
+        }
+
+        return true;
+    }
+
+    bool compare_desc(const ip_t &lhs, const ip_t &rhs)
+    {
+        for (std::size_t index = 0; index < lhs.size(); ++index)
+        {
+            if (lhs[index] != rhs[index])
             {
-                return false;
+                return lhs[index] > rhs[index];
             }
         }
+
         return false;
+    }
+
+    std::vector<ip_t> filter_first(const std::vector<ip_t> &ip_pool, int first_octet)
+    {
+        std::vector<ip_t> result;
+        std::copy_if(ip_pool.begin(), ip_pool.end(), std::back_inserter(result),
+            [first_octet](const ip_t &ip)
+            {
+                return ip[0] == first_octet;
+            });
+        return result;
+    }
+
+    std::vector<ip_t> filter_first_second(const std::vector<ip_t> &ip_pool, int first_octet, int second_octet)
+    {
+        std::vector<ip_t> result;
+        std::copy_if(ip_pool.begin(), ip_pool.end(), std::back_inserter(result),
+            [first_octet, second_octet](const ip_t &ip)
+            {
+                return ip[0] == first_octet && ip[1] == second_octet;
+            });
+        return result;
+    }
+
+    std::vector<ip_t> filter_any(const std::vector<ip_t> &ip_pool, int octet)
+    {
+        std::vector<ip_t> result;
+        std::copy_if(ip_pool.begin(), ip_pool.end(), std::back_inserter(result),
+            [octet](const ip_t &ip)
+            {
+                return std::any_of(ip.begin(), ip.end(), [octet](int value)
+                {
+                    return value == octet;
+                });
+            });
+        return result;
     }
 }

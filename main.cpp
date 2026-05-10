@@ -5,10 +5,10 @@
 
 namespace
 {
-	void print_ip(const std::vector<std::string> &ip)
+    void print_ip(const ip_filter::ip_t &ip)
 	{
 		bool first = true;
-		for (const auto &ip_part : ip)
+        for (const auto ip_part : ip)
 		{
 			if (!first)
 			{
@@ -19,7 +19,7 @@ namespace
 		}
 		std::cout << "\n";
 	}
-	void print_ip_pool(const std::vector<std::vector<std::string>> &ip_pool)
+    void print_ip_pool(const std::vector<ip_filter::ip_t> &ip_pool)
 	{
 		for (const auto &ip : ip_pool)
 		{
@@ -34,43 +34,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 	// std::cout << "build " << version() << std::endl;
     try
     {
-        std::vector<std::vector<std::string> > ip_pool;
+        std::vector<ip_t> ip_pool;
 
         for(std::string line; std::getline(std::cin, line);)
         {
-            auto v = split(line, '\t');
-            ip_pool.push_back(split(v.at(0), '.'));
+            const auto columns = split(line, '\t');
+            ip_t ip{};
+            parse_ip(columns.at(0), ip);
+            ip_pool.push_back(ip);
         }
 
-        // TODO reverse lexicographically sort
+        std::sort(ip_pool.begin(), ip_pool.end(), compare_desc);
 
-		std::sort(ip_pool.begin(), ip_pool.end(), compare_desc);
-
-		print_ip_pool(ip_pool);
-
-		for (const auto& ip : ip_pool)
-		{
-			if (ip[0] == "1")
-			{
-				print_ip(ip);
-			}
-		}
-
-		for (const auto& ip: ip_pool)
-		{
-			if (ip[0] == "46" && ip[1] == "70")
-			{
-				print_ip(ip);
-			}
-		}
-		
-		for (const auto& ip: ip_pool)
-		{
-			if (ip[0] == "46" || ip[1] == "46" || ip[2] == "46" || ip[3] == "46")
-			{
-				print_ip(ip);
-			}
-		}
+        print_ip_pool(ip_pool);
+        print_ip_pool(filter_first(ip_pool, 1));
+        print_ip_pool(filter_first_second(ip_pool, 46, 70));
+        print_ip_pool(filter_any(ip_pool, 46));
 
         // 222.173.235.246
         // 222.130.177.64
@@ -138,6 +117,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
     catch(const std::exception &e)
     {
         std::cerr << e.what() << "\n";
+        return 1;
     }
 
     return 0;

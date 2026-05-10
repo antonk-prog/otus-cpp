@@ -14,7 +14,7 @@ add_executable(ip_filter main.cpp)
 add_library(patch_lib patch_lib.cpp)
 add_library(ip_filter_lib ip_filter_lib.cpp)
 
-set_target_properties(ip_filter patch_lib PROPERTIES
+set_target_properties(ip_filter patch_lib ip_filter_lib PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -74,34 +74,22 @@ if(WITH_GOOGLE_TEST)
 endif()
 
 if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
-        /W4
-    )
-    target_compile_options(helloworld PRIVATE
-        /W4
-    )
-    if(WITH_BOOST_TEST)
-        target_compile_options(test_version_boost PRIVATE
-            /W4
-        )
-    endif()
+    target_compile_options(ip_filter PRIVATE /W4)
+    target_compile_options(patch_lib PRIVATE /W4)
+    target_compile_options(ip_filter_lib PRIVATE /W4)
     if(WITH_GOOGLE_TEST)
-        target_compile_options(test_version_google PRIVATE
-            /W4
-        )
+        target_compile_options(test_ip_filter PRIVATE /W4)
     endif()
 else ()
     target_compile_options(ip_filter PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    target_compile_options(ip_filter PRIVATE
+    target_compile_options(patch_lib PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    # if(WITH_BOOST_TEST)
-    #     target_compile_options(test_ip_filter PRIVATE
-    #         -Wall -Wextra -pedantic -Werror
-    #     )
-    # endif()
+    target_compile_options(ip_filter_lib PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
     if(WITH_GOOGLE_TEST)
         target_compile_options(test_ip_filter PRIVATE
             -Wall -Wextra -pedantic -Werror
