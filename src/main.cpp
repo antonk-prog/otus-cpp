@@ -1,7 +1,7 @@
-#include "patch_lib.h"
 #include "ip_filter_lib.h"
 #include <iostream>
 #include <algorithm>
+#include <functional>
 
 namespace
 {
@@ -44,11 +44,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
             ip_pool.push_back(ip);
         }
 
-        std::sort(ip_pool.begin(), ip_pool.end(), compare_desc);
+        std::sort(ip_pool.begin(), ip_pool.end(), std::greater<ip_t>());
 
         print_ip_pool(ip_pool);
-        print_ip_pool(filter_first(ip_pool, 1));
-        print_ip_pool(filter_first_second(ip_pool, 46, 70));
+        print_ip_pool(filter(ip_pool, 1));
+        print_ip_pool(filter(ip_pool, 46, 70));
         print_ip_pool(filter_any(ip_pool, 46));
 
         // 222.173.235.246

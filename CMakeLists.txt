@@ -1,30 +1,28 @@
 cmake_minimum_required(VERSION 3.12)
 
-set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
-set(PROJECT_VERSION 0.0.${PATCH_VERSION})
-
-project(ip_filter_app VERSION ${PROJECT_VERSION})
+project(ip_filter_app VERSION 1.0.0 LANGUAGES CXX)
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 option(WITH_GOOGLE_TEST "Whether to build Google test" ON)
 
-configure_file(patch_version.h.in patch_version.h)
+add_executable(ip_filter src/main.cpp)
 
-add_executable(ip_filter main.cpp)
-add_library(patch_lib patch_lib.cpp)
-add_library(ip_filter_lib ip_filter_lib.cpp)
+add_library(ip_filter_lib src/ip_filter_lib.cpp)
 
-set_target_properties(ip_filter patch_lib ip_filter_lib PROPERTIES
-    CXX_STANDARD 14
+set_target_properties(ip_filter ip_filter_lib PROPERTIES
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
 
-target_include_directories(patch_lib
-    PRIVATE "${CMAKE_BINARY_DIR}"
+target_include_directories(ip_filter PRIVATE 
+    src 
+)
+
+target_include_directories(ip_filter_lib PUBLIC 
+    src
 )
 
 target_link_libraries(ip_filter PRIVATE
-    patch_lib
     ip_filter_lib
 )
 
@@ -59,10 +57,10 @@ if(WITH_GOOGLE_TEST)
         endif()
     endif()
 
-    add_executable(test_ip_filter test_ip_filter.cpp)
+    add_executable(test_ip_filter tests/test_ip_filter.cpp)
 
     set_target_properties(test_ip_filter PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
     )
 
@@ -75,16 +73,12 @@ endif()
 
 if (MSVC)
     target_compile_options(ip_filter PRIVATE /W4)
-    target_compile_options(patch_lib PRIVATE /W4)
     target_compile_options(ip_filter_lib PRIVATE /W4)
     if(WITH_GOOGLE_TEST)
         target_compile_options(test_ip_filter PRIVATE /W4)
     endif()
 else ()
     target_compile_options(ip_filter PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-    target_compile_options(patch_lib PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     target_compile_options(ip_filter_lib PRIVATE
@@ -105,11 +99,6 @@ set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
 set(CPACK_PACKAGE_CONTACT example@example.com)
 include(CPack)
-
-# if(WITH_BOOST_TEST)
-#     enable_testing()
-#     add_test(test_ip_filter test_ip_filter)
-# endif()
 
 if(WITH_GOOGLE_TEST)
     enable_testing()
