@@ -39,6 +39,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./app-1.0.0-Linux.deb
-          asset_name: app-1.0.0-Linux.deb
+          asset_path: ./custom_allocator-1.0.0-Linux.deb
+          asset_name: custom_allocator-1.0.0-Linux.deb
           asset_content_type: applicationvnd.debian.binary-package/
