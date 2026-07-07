@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <stdexcept>
 #include <cstdint>
 #include <memory>
@@ -10,27 +11,24 @@ struct AllocatorPool
     explicit AllocatorPool(std::size_t lim) : limit(lim) {}
 };
 
-template <typename T>
+template <typename T, std::size_t N>
 class CustomAllocator
 {
 private:
     std::shared_ptr<AllocatorPool> m_pool;
 
-    template <typename U>
-    friend class CustomAllocator;
+    template <typename U, std::size_t M>
 
 public:
     using value_type = T;
 
-    CustomAllocator() = default;
-
-    explicit CustomAllocator(std::size_t limit)
-        : m_pool(std::make_shared<AllocatorPool>(limit))
+    CustomAllocator()
+        : m_pool(std::make_shared<AllocatorPool>(N))
     {
     }
 
     template <typename U>
-    CustomAllocator(const CustomAllocator<U>& other) noexcept
+    CustomAllocator(const CustomAllocator<U, N>& other) noexcept
         : m_pool(other.m_pool)
     {
     }
@@ -38,7 +36,7 @@ public:
     template <typename U>
     struct rebind
     {
-        using other = CustomAllocator<U>;
+        using other = CustomAllocator<U, N>;
     };
 
     T* allocate(std::size_t n)

@@ -15,9 +15,9 @@ int main()
     for (int i = 0; i < 10; ++i)
         m1[i] = factorial(i);
 
-    std::map<int, int, std::less<int>, CustomAllocator<std::pair<const int, int>>> m2(
-        CustomAllocator<std::pair<const int, int>>(10)
-    );
+    std::map<int, int, std::less<int>, CustomAllocator<std::pair<const int, int>, 10>> m2{
+        CustomAllocator<std::pair<const int, int>, 10>()
+    };
     for (int i = 0; i < 10; ++i)
         m2[i] = factorial(i);
 
@@ -33,7 +33,7 @@ int main()
         c1.push(i);
 
     // 8-9. Свой контейнер с кастомным аллокатором (лимит 10)
-    CustomContainer<int, CustomAllocator<int>> c2(CustomAllocator<int>(10));
+    CustomContainer<int, CustomAllocator<int, 10>> c2{CustomAllocator<int, 10>()};
     c2.reserve(10);
     for (int i = 0; i < 10; ++i)
         c2.push(i);
