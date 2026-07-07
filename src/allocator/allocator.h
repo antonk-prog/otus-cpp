@@ -1,5 +1,4 @@
 #pragma once
-#include <cstddef>
 #include <stdexcept>
 #include <cstdint>
 #include <memory>
@@ -17,7 +16,8 @@ class CustomAllocator
 private:
     std::shared_ptr<AllocatorPool> m_pool;
 
-    template <typename U, std::size_t M>
+    template <typename U>
+    friend class CustomAllocator;
 
 public:
     using value_type = T;
@@ -28,7 +28,7 @@ public:
     }
 
     template <typename U>
-    CustomAllocator(const CustomAllocator<U, N>& other) noexcept
+    CustomAllocator(const CustomAllocator<U>& other) noexcept
         : m_pool(other.m_pool)
     {
     }
