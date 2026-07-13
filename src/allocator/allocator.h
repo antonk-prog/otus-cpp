@@ -1,21 +1,50 @@
 #pragma once
-#include <cstddef>
-#include <stdexcept>
-#include <cstdint>
-#include <memory>
 
+#include <cstddef>
+#include <memory>
+#include <new>
+
+template <typename T>
 struct AllocatorPool
 {
-    std::size_t limit;
+    std::size_t limit{0};
     std::size_t allocated{0};
-    explicit AllocatorPool(std::size_t lim) : limit(lim) {}
+    T* storage{nullptr};
+
+    explicit AllocatorPool(std::size_t lim)
+        : limit(lim)
+        , storage(lim == 0 ? nullptr : static_cast<T*>(::operator new(lim * sizeof(T), std::align_val_t{alignof(T)})))
+    {
+    }
+
+    ~AllocatorPool()
+    {
+        if (storage)
+            ::operator delete(storage, std::align_val_t{alignof(T)});
+    }
+
+    T* allocate(std::size_t n)
+    {
+        if (n == 0)
+            return nullptr;
+        if (allocated + n > limit)
+            throw std::bad_alloc();
+
+        T* result = storage + allocated;
+        allocated += n;
+        return result;
+    }
+
+    void deallocate(T*, std::size_t) noexcept
+    {
+    }
 };
 
 template <typename T, std::size_t N>
 class CustomAllocator
 {
 private:
-    std::shared_ptr<AllocatorPool> m_pool;
+    std::shared_ptr<AllocatorPool<T>> m_pool;
 
     template <typename U, std::size_t M>
     friend class CustomAllocator;
@@ -24,13 +53,13 @@ public:
     using value_type = T;
 
     CustomAllocator()
-        : m_pool(std::make_shared<AllocatorPool>(N))
+        : m_pool(std::make_shared<AllocatorPool<T>>(N))
     {
     }
 
     template <typename U>
-    CustomAllocator(const CustomAllocator<U, N>& other) noexcept
-        : m_pool(other.m_pool)
+    CustomAllocator(const CustomAllocator<U, N>&)
+        : m_pool(std::make_shared<AllocatorPool<T>>(N))
     {
     }
 
@@ -42,19 +71,12 @@ public:
 
     T* allocate(std::size_t n)
     {
-        if (n == 0)
-            throw std::invalid_argument("n must be > 0");
-        if (!m_pool || m_pool->allocated + n > m_pool->limit)
-            throw std::bad_alloc();
-        m_pool->allocated += n;
-        return static_cast<T*>(::operator new(n * sizeof(T)));
+        return m_pool->allocate(n);
     }
 
     void deallocate(T* p, std::size_t n) noexcept
     {
-        if (m_pool)
-            m_pool->allocated -= n;
-        ::operator delete(p);
+        m_pool->deallocate(p, n);
     }
 
     friend bool operator==(const CustomAllocator& a, const CustomAllocator& b)
