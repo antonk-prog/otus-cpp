@@ -6,8 +6,6 @@ on:
       - master
       - feature/github_actions
       - '**'
-    paths-ignore:
-      - 'third-party/**'
 
   workflow_dispatch:
 
