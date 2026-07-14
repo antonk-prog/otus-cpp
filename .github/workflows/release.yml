@@ -7,8 +7,8 @@ on:
       - feature/github_actions
       - '**'
     paths-ignore:
-      - 'third-party/**
-      
+      - 'third-party/**'
+
   workflow_dispatch:
 
 permissions:
