@@ -1,4 +1,4 @@
-name: editor
+name: matrix
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         run: cmake --build build
 
       - name: Run app
-        run: ./build/editor
+        run: ./build/matrix
 
       - name: Generate DEB package
         run: |
@@ -39,8 +39,8 @@ jobs:
       - name: Upload DEB as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: editor-deb
-          path: build/editor-*.deb
+          name: matrix-deb
+          path: build/matrix-*.deb
 
       - name: Create Release
         id: create_release
@@ -60,6 +60,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/editor-1.0.0-Linux.deb
-          asset_name: editor-1.0.0-Linux.deb
+          asset_path: ./build/matrix-1.0.0-Linux.deb
+          asset_name: matrix-1.0.0-Linux.deb
           asset_content_type: applicationvnd.debian.binary-package/
