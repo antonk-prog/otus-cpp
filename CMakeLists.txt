@@ -1,22 +1,21 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(print_ip VERSION 1.0.0 LANGUAGES CXX)
+project(editor VERSION 1.0.0 LANGUAGES CXX)
 
-add_executable(print_ip src/main.cpp)
+add_executable(editor src/main.cpp)
 
-set_target_properties(print_ip PROPERTIES
+set_target_properties(editor PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
 
-target_include_directories(print_ip
+target_include_directories(editor
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 
 
-
-install(TARGETS print_ip RUNTIME DESTINATION bin)
+install(TARGETS editor RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_NAME print_ip)
