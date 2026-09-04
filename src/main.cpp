@@ -1,33 +1,37 @@
+#include <cstdlib>
 #include <iostream>
-#include "matrix.h"
-#include <tuple>
+#include <string>
 
-int main()
-{
-    Matrix<int, -1> matrix;
+#include "bulk.h"
 
-    for (int i = 0; i <= 9; ++i) matrix[i][i] = i;
+namespace {
 
-    for (int i = 0; i <= 9; ++i) matrix[i][9 - i] = 9 - i;
+bool parse_block_size(const char* arg, size_t& block_size) {
+    if (arg == nullptr || *arg == '\0') {
+        return false;
+    }
+    char* end = nullptr;
+    const unsigned long value = std::strtoul(arg, &end, 10);
+    if (*end != '\0' || value == 0) {
+        return false;
+    }
+    block_size = static_cast<size_t>(value);
+    return true;
+}
 
-    for (int r = 1; r <= 8; ++r)
-    {
-        for (int c = 1; c <= 8; ++c)
-        {
-            if (c != 1) std::cout << ' ';
-            std::cout << matrix[r][c];
-        }
-        std::cout << '\n';
+}  // namespace
+
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cout << "Invalid input! Example: ./bulk 3\n";
+        return 1;
     }
 
-    std::cout << matrix.size() << std::endl;
-
-    for (auto t : matrix)
-    {
-        int x, y, v;
-        std::tie(x, y, v) = t;
-        std::cout << x << ' ' << y << ' ' << v << '\n';
+    size_t block_size = 0;
+    if (!parse_block_size(argv[1], block_size)) {
+        std::cout << "Block size must be   positive integer!\n";
+        return 1;
     }
 
-    return 0;
+    return bulk(block_size);
 }
