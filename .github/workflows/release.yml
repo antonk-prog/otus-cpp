@@ -28,9 +28,6 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: Run app
-        run: ./build/bulk
-
       - name: Generate DEB package
         run: |
           cd build
