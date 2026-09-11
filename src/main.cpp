@@ -2,7 +2,9 @@
 #include <iostream>
 #include <string>
 
-#include "bulk.h"
+#include "bulk_parser.h"
+#include "console_writer.h"
+#include "file_writer.h"
 
 namespace {
 
@@ -29,9 +31,19 @@ int main(int argc, char** argv) {
 
     size_t block_size = 0;
     if (!parse_block_size(argv[1], block_size)) {
-        std::cout << "Block size must be   positive integer!\n";
+        std::cout << "Block size must be a positive integer!\n";
         return 1;
     }
 
-    return bulk(block_size);
+    BulkParser parser(block_size);
+
+    ConsoleWriter console_writer;
+    FileWriter file_writer;
+
+    parser.attach(&console_writer);
+    parser.attach(&file_writer);
+
+    parser.run();
+
+    return 0;
 }

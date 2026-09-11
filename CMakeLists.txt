@@ -4,7 +4,9 @@ project(bulk VERSION 1.0.0 LANGUAGES CXX)
 
 add_executable(bulk
     src/main.cpp
-    src/bulk.cpp
+    src/bulk_parser.cpp
+    src/console_writer.cpp
+    src/file_writer.cpp
 )
 
 set_target_properties(bulk PROPERTIES
