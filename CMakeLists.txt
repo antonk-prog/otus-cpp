@@ -1,40 +1,49 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(bayan VERSION 1.0.0 LANGUAGES CXX)
+project(async VERSION 1.0.0 LANGUAGES CXX)
 
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+find_package(Threads REQUIRED)
+
+add_library(async SHARED
+    src/async.cpp
+    src/context.cpp
+    src/runtime.cpp
+)
+
+target_include_directories(async
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_link_libraries(async PRIVATE Threads::Threads)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(async PRIVATE -Wall -Wextra)
+elseif(MSVC)
+    target_compile_options(async PRIVATE /W4)
 endif()
 
-find_package(Boost 1.74 REQUIRED CONFIG COMPONENTS program_options)
+add_executable(async_demo demo/main.cpp)
+target_link_libraries(async_demo PRIVATE async)
 
-add_executable(bayan
-    src/main.cpp
-    src/hashes.cpp
-    src/file_hashes.cpp
-    src/scan.cpp
-    src/duplicates.cpp
+install(TARGETS async async_demo
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION lib
 )
 
-set_target_properties(bayan PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
-)
-
-target_include_directories(bayan
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
-
-target_link_libraries(bayan
-    PRIVATE
-        Boost::program_options
-        Boost::boost
-)
-
-install(TARGETS bayan RUNTIME DESTINATION bin)
+install(FILES include/async.h DESTINATION include)
 
 set(CPACK_GENERATOR DEB)
-set(CPACK_PACKAGE_NAME bayan)
+set(CPACK_PACKAGE_NAME async)
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
