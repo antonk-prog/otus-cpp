@@ -1,10 +1,9 @@
-name: bulk
+name: bayan
 
 on:
   push:
     branches:
       - master
-      - feature/github_actions
       - '**'
 
   workflow_dispatch:
@@ -20,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install tools
-        run: sudo apt-get update && sudo apt-get install -y cmake
+        run: sudo apt-get update && sudo apt-get install -y cmake libboost-all-dev
 
       - name: Configure
         run: cmake -S . -B build
@@ -32,12 +31,12 @@ jobs:
         run: |
           cd build
           cpack -G DEB
-          
+
       - name: Upload DEB as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bulk-deb
-          path: build/bulk-*.deb
+          name: bayan-deb
+          path: build/bayan-*.deb
 
       - name: Create Release
         id: create_release
@@ -49,7 +48,7 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
-          
+
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -57,6 +56,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/bulk-1.0.0-Linux.deb
-          asset_name: bulk-1.0.0-Linux.deb
+          asset_path: ./build/bayan-1.0.0-Linux.deb
+          asset_name: bayan-1.0.0-Linux.deb
           asset_content_type: applicationvnd.debian.binary-package/
