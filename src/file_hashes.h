@@ -4,7 +4,9 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <optional>
+#include <string>
 #include <vector>
 
 class FileHashes {
@@ -14,11 +16,9 @@ public:
     FileHashes(const FileHashes&) = delete;
     FileHashes& operator=(const FileHashes&) = delete;
 
-    ~FileHashes();
-
     std::size_t blockCount() const noexcept { return cache_.size(); }
 
-    std::optional<std::uint64_t> blockHash(std::size_t index);
+    std::optional<std::string> blockHash(std::size_t index);
 
 private:
     bool ensureOpen();
@@ -26,8 +26,8 @@ private:
     std::filesystem::path path_;
     std::uint64_t blockSize_;
     HashAlgo algo_;
-    int fd_ = -1;
+    std::ifstream stream_;
     bool openAttempted_ = false;
     std::vector<char> buffer_;
-    std::vector<std::optional<std::uint64_t>> cache_;
+    std::vector<std::optional<std::string>> cache_;
 };

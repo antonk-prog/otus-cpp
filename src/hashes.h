@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
+#include <string>
 #include <string_view>
 
 enum class HashAlgo {
@@ -11,4 +11,4 @@ enum class HashAlgo {
 
 HashAlgo parseHashAlgo(std::string_view name);
 
-std::uint64_t hashBlock(const void* data, std::size_t size, HashAlgo algo);
+std::string hashBlock(const void* data, std::size_t size, HashAlgo algo);

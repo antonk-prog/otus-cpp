@@ -1,10 +1,7 @@
 #include "file_hashes.h"
 
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <cerrno>
 #include <cstring>
+#include <ios>
 
 FileHashes::FileHashes(std::filesystem::path path, std::uint64_t size, std::uint64_t blockSize,
                        HashAlgo algo)
@@ -16,25 +13,19 @@ FileHashes::FileHashes(std::filesystem::path path, std::uint64_t size, std::uint
     cache_.resize(static_cast<std::size_t>(count));
 }
 
-FileHashes::~FileHashes() {
-    if (fd_ >= 0) {
-        ::close(fd_);
-    }
-}
-
 bool FileHashes::ensureOpen() {
-    if (fd_ >= 0) {
+    if (stream_.is_open()) {
         return true;
     }
     if (openAttempted_) {
         return false;
     }
     openAttempted_ = true;
-    fd_ = ::open(path_.c_str(), O_RDONLY | O_CLOEXEC);
-    return fd_ >= 0;
+    stream_.open(path_, std::ios::binary);
+    return stream_.is_open();
 }
 
-std::optional<std::uint64_t> FileHashes::blockHash(std::size_t index) {
+std::optional<std::string> FileHashes::blockHash(std::size_t index) {
     if (index >= cache_.size()) {
         return std::nullopt;
     }
@@ -45,24 +36,21 @@ std::optional<std::uint64_t> FileHashes::blockHash(std::size_t index) {
         return std::nullopt;
     }
 
-    const off_t offset = static_cast<off_t>(index * blockSize_);
-    std::size_t received = 0;
-    while (received < buffer_.size()) {
-        const ssize_t n =
-            ::pread(fd_, buffer_.data() + received, buffer_.size() - received, offset + received);
-        if (n < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            return std::nullopt;
-        }
-        if (n == 0) {
-            break;
-        }
-        received += static_cast<std::size_t>(n);
+    const auto offset = static_cast<std::streamoff>(index * blockSize_);
+    stream_.clear();
+    stream_.seekg(offset, std::ios::beg);
+    if (!stream_) {
+        return std::nullopt;
     }
-    if (received < buffer_.size()) {
-        std::memset(buffer_.data() + received, 0, buffer_.size() - received);
+
+    stream_.read(buffer_.data(), static_cast<std::streamsize>(buffer_.size()));
+    const std::streamsize received = stream_.gcount();
+    if (received < 0) {
+        return std::nullopt;
+    }
+    const auto got = static_cast<std::size_t>(received);
+    if (got < buffer_.size()) {
+        std::memset(buffer_.data() + got, 0, buffer_.size() - got);
     }
 
     cache_[index] = hashBlock(buffer_.data(), buffer_.size(), algo_);
