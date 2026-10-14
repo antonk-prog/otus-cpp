@@ -28,12 +28,19 @@ void Context::feed(const char *data, std::size_t size)
     std::lock_guard<std::mutex> lock(mutex_);
     pending_.append(data, size);
 
-    std::size_t newline = std::string::npos;
-    while ((newline = pending_.find('\n')) != std::string::npos)
+    // Обрабатываем строки, продвигаясь по буферу одним проходом,
+    // и сдвигаем оставшийся хвост только один раз в конце — O(N).
+    std::size_t line_start = 0;
+    std::size_t newline = pending_.find('\n', line_start);
+    while (newline != std::string::npos)
     {
-        std::string line = pending_.substr(0, newline);
-        pending_.erase(0, newline + 1);
-        processLine(line);
+        processLine(pending_.substr(line_start, newline - line_start));
+        line_start = newline + 1;
+        newline = pending_.find('\n', line_start);
+    }
+    if (line_start > 0)
+    {
+        pending_.erase(0, line_start);
     }
 }
 

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 
 #include "context.h"
@@ -13,12 +14,12 @@ namespace async
 namespace
 {
 
-std::mutex g_contexts_mutex;
+std::shared_mutex g_contexts_mutex;
 std::unordered_map<handle_t, std::shared_ptr<Context>> g_contexts;
 
 std::shared_ptr<Context> findContext(handle_t handle)
 {
-    std::lock_guard<std::mutex> lock(g_contexts_mutex);
+    std::shared_lock<std::shared_mutex> lock(g_contexts_mutex);
     const auto it = g_contexts.find(handle);
     if (it == g_contexts.end())
     {
@@ -34,7 +35,7 @@ handle_t connect(std::size_t bulk)
     Runtime &runtime = Runtime::instance();
     auto context = std::make_shared<Context>(bulk, runtime);
 
-    std::lock_guard<std::mutex> lock(g_contexts_mutex);
+    std::unique_lock<std::shared_mutex> lock(g_contexts_mutex);
     g_contexts[context.get()] = context;
     return context.get();
 }
@@ -53,7 +54,7 @@ void disconnect(handle_t handle)
 {
     std::shared_ptr<Context> context;
     {
-        std::lock_guard<std::mutex> lock(g_contexts_mutex);
+        std::unique_lock<std::shared_mutex> lock(g_contexts_mutex);
         const auto it = g_contexts.find(handle);
         if (it == g_contexts.end())
         {
