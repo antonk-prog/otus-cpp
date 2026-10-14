@@ -1,3 +1,4 @@
+#include <cerrno>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -16,9 +17,17 @@ bool parseUnsigned(const char *arg, unsigned long &value)
     {
         return false;
     }
+    for (const char *p = arg; *p != '\0'; ++p)
+    {
+        if (*p < '0' || *p > '9')
+        {
+            return false;
+        }
+    }
+    errno = 0;
     char *end = nullptr;
     const unsigned long parsed = std::strtoul(arg, &end, 10);
-    if (*end != '\0' || parsed == 0)
+    if (errno == ERANGE || *end != '\0' || parsed == 0)
     {
         return false;
     }
@@ -53,11 +62,14 @@ int main(int argc, char **argv)
     {
         boost::asio::io_context io;
 
-        boost::asio::signal_set signals(io, SIGINT, SIGTERM);
-        signals.async_wait(
-            [&io](const boost::system::error_code &, int) { io.stop(); });
-
         async::Server server(io, static_cast<std::uint16_t>(port), block_size);
+
+        boost::asio::signal_set signals(io, SIGINT, SIGTERM);
+        signals.async_wait([&io, &server](const boost::system::error_code &, int) {
+            server.stop();
+            io.stop();
+        });
+
         server.start();
 
         io.run();

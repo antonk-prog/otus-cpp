@@ -29,6 +29,20 @@ endif()
 
 install(TARGETS bulk_server RUNTIME DESTINATION bin)
 
+enable_testing()
+
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    add_test(
+        NAME server_integration
+        COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_server.py
+                $<TARGET_FILE:bulk_server>
+    )
+else()
+    message(STATUS "Python3 not found: skipping integration tests")
+endif()
+
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_NAME bulk_server)
 set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")

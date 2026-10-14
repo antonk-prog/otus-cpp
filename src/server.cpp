@@ -12,8 +12,7 @@ namespace async
 {
 
 Server::Server(boost::asio::io_context &io, std::uint16_t port, std::size_t block_size)
-    : io_(io),
-      acceptor_(io),
+    : acceptor_(io),
       collector_(block_size, Runtime::instance()),
       runtime_(Runtime::instance())
 {
@@ -60,6 +59,13 @@ void Server::openAcceptor(std::uint16_t port)
 void Server::start()
 {
     accept();
+}
+
+void Server::stop()
+{
+    boost::system::error_code ignored;
+    acceptor_.close(ignored);
+    collector_.flush();
 }
 
 void Server::accept()

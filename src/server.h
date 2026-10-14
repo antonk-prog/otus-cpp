@@ -18,12 +18,12 @@ public:
     Server(boost::asio::io_context &io, std::uint16_t port, std::size_t block_size);
 
     void start();
+    void stop();
 
 private:
     void accept();
     void openAcceptor(std::uint16_t port);
 
-    boost::asio::io_context &io_;
     boost::asio::ip::tcp::acceptor acceptor_;
     StaticCollector collector_;
     Runtime &runtime_;

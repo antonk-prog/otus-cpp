@@ -32,6 +32,7 @@ private:
     void onRead(const boost::system::error_code &error, std::size_t length);
     void handleLine(const std::string &line);
     void emitDynamic();
+    void close();
     void finish();
 
     boost::asio::ip::tcp::socket socket_;
