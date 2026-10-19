@@ -1,31 +1,31 @@
-## Запуск
+## join_server
 
 ```bash
-./build/bulk_server <port> <bulk_size>
+./build/join_server <port>
 ```
 
-Пример:
-
-```bash
-./build/bulk_server 9000 3
-seq 0 9 | nc localhost 9000
-```
-
-В консоли появится:
+Пример сессии (`nc localhost 9000`):
 
 ```
-bulk: 0, 1, 2
-bulk: 3, 4, 5
-bulk: 6, 7, 8
-bulk: 9
+INSERT A 0 lean
+OK
+INSERT A 0 understand
+ERR duplicate 0
+INTERSECTION
+OK
 ```
 
-и будет создано четыре файла с соответствующим содержимым.
+Поддерживаемые команды:
+
+- `INSERT table id name`
+- `TRUNCATE table`
+- `INTERSECTION`
+- `SYMMETRIC_DIFFERENCE`
 
 ## Пакет
 
 ```bash
 cd build
 cpack -G DEB
-sudo dpkg -i bulk_server-1.0.0-Linux.deb
+sudo dpkg -i join_server-1.0.0-Linux.deb
 ```

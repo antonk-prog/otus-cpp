@@ -1,4 +1,4 @@
-name: bulk_server
+name: join_server
 
 on:
   push:
@@ -36,8 +36,8 @@ jobs:
       - name: Upload DEB as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bulk_server-deb
-          path: build/bulk_server-*.deb
+          name: join_server-deb
+          path: build/join_server-*.deb
 
       - name: Create Release
         id: create_release
@@ -56,6 +56,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/bulk_server-1.0.0-Linux.deb
-          asset_name: bulk_server-1.0.0-Linux.deb
+          asset_path: ./build/join_server-1.0.0-Linux.deb
+          asset_name: join_server-1.0.0-Linux.deb
           asset_content_type: applicationvnd.debian.binary-package/

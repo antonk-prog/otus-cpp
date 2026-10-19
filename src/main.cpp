@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <thread>
 
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
@@ -10,7 +12,7 @@
 namespace
 {
 
-bool parseUnsigned(const char *arg, unsigned long &value)
+bool parsePort(const char *arg, unsigned long &port)
 {
     if (arg == nullptr || *arg == '\0')
     {
@@ -18,49 +20,46 @@ bool parseUnsigned(const char *arg, unsigned long &value)
     }
     char *end = nullptr;
     const unsigned long parsed = std::strtoul(arg, &end, 10);
-    if (*end != '\0' || parsed == 0)
+    if (*end != '\0' || parsed == 0 || parsed > 65535)
     {
         return false;
     }
-    value = parsed;
+    port = parsed;
     return true;
 }
 
-} // namespace
+}
 
 int main(int argc, char **argv)
 {
-    if (argc != 3)
+    if (argc != 2)
     {
-        std::cerr << "Usage: bulk_server <port> <bulk_size>\n";
+        std::cerr << "Usage: join_server <port>\n";
         return 1;
     }
 
     unsigned long port = 0;
-    unsigned long block_size = 0;
-    if (!parseUnsigned(argv[1], port) || port > 65535)
+    if (!parsePort(argv[1], port))
     {
         std::cerr << "Port must be an integer in range 1..65535!\n";
-        return 1;
-    }
-    if (!parseUnsigned(argv[2], block_size))
-    {
-        std::cerr << "Block size must be a positive integer!\n";
         return 1;
     }
 
     try
     {
         boost::asio::io_context io;
+        const unsigned hardware = std::thread::hardware_concurrency();
+        boost::asio::thread_pool workers(std::max(2u, hardware));
 
         boost::asio::signal_set signals(io, SIGINT, SIGTERM);
         signals.async_wait(
             [&io](const boost::system::error_code &, int) { io.stop(); });
 
-        async::Server server(io, static_cast<std::uint16_t>(port), block_size);
+        join::Server server(io, workers, static_cast<std::uint16_t>(port));
         server.start();
 
         io.run();
+        workers.join();
     }
     catch (const std::exception &error)
     {

@@ -5,17 +5,15 @@
 
 #include <boost/asio/ip/v6_only.hpp>
 
-#include "connection.h"
-#include "runtime.h"
+#include "session.h"
 
-namespace async
+namespace join
 {
 
-Server::Server(boost::asio::io_context &io, std::uint16_t port, std::size_t block_size)
-    : io_(io),
-      acceptor_(io),
-      collector_(block_size, Runtime::instance()),
-      runtime_(Runtime::instance())
+Server::Server(boost::asio::io_context &io,
+               boost::asio::thread_pool &workers,
+               std::uint16_t port)
+    : io_(io), workers_(workers), acceptor_(io)
 {
     openAcceptor(port);
     acceptor_.listen();
@@ -25,8 +23,8 @@ void Server::openAcceptor(std::uint16_t port)
 {
     boost::system::error_code error;
 
-    // Prefer a dual stack IPv6 socket so both IPv4 and IPv6 clients can use
-    // any network interface. If IPv6 is unavailable fall back to IPv4.
+
+
     const boost::asio::ip::tcp::endpoint v6_endpoint(boost::asio::ip::tcp::v6(), port);
     acceptor_.open(v6_endpoint.protocol(), error);
     if (!error)
@@ -65,10 +63,13 @@ void Server::start()
 void Server::accept()
 {
     acceptor_.async_accept(
-        [this](const boost::system::error_code &error, boost::asio::ip::tcp::socket socket) {
+        [this](const boost::system::error_code &error,
+               boost::asio::ip::tcp::socket socket) {
             if (!error)
             {
-                std::make_shared<Connection>(std::move(socket), collector_, runtime_)->start();
+                std::make_shared<Session>(std::move(socket), database_,
+                                          workers_, io_)
+                    ->start();
             }
             if (acceptor_.is_open())
             {
@@ -77,4 +78,4 @@ void Server::accept()
         });
 }
 
-} // namespace async
+}

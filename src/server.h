@@ -1,21 +1,20 @@
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 
 #include <boost/asio.hpp>
 
-#include "collector.h"
+#include "database.h"
 
-namespace async
+namespace join
 {
-
-class Runtime;
 
 class Server
 {
 public:
-    Server(boost::asio::io_context &io, std::uint16_t port, std::size_t block_size);
+    Server(boost::asio::io_context &io,
+           boost::asio::thread_pool &workers,
+           std::uint16_t port);
 
     void start();
 
@@ -24,9 +23,9 @@ private:
     void openAcceptor(std::uint16_t port);
 
     boost::asio::io_context &io_;
+    boost::asio::thread_pool &workers_;
     boost::asio::ip::tcp::acceptor acceptor_;
-    StaticCollector collector_;
-    Runtime &runtime_;
+    Database database_;
 };
 
-} // namespace async
+}
