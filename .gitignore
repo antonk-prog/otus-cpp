@@ -1,3 +1,5 @@
 build/
+bin/
 *.deb
 bulk*.log
+__pycache__/

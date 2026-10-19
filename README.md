@@ -1,31 +1,37 @@
-## join_server
+## MapReduce
+
+Исходники находятся в `src/`.
+
+Сборка:
 
 ```bash
-./build/join_server <port>
+make all
 ```
 
-Пример сессии (`nc localhost 9000`):
-
-```
-INSERT A 0 lean
-OK
-INSERT A 0 understand
-ERR duplicate 0
-INTERSECTION
-OK
-```
-
-Поддерживаемые команды:
-
-- `INSERT table id name`
-- `TRUNCATE table`
-- `INTERSECTION`
-- `SYMMETRIC_DIFFERENCE`
-
-## Пакет
+Запуск на датасете из `input/`:
 
 ```bash
-cd build
-cpack -G DEB
-sudo dpkg -i join_server-1.0.0-Linux.deb
+./run_locally.sh
 ```
+
+Ожидаемый результат для `AB_NYC_2019.csv`:
+
+```
+mean
+mean	152.72068718682891
+variance
+variance	57672.845698433593
+```
+
+`variance` — генеральная дисперсия (`E[X^2] - E[X]^2`).
+
+Тесты:
+
+```bash
+make test
+```
+
+Бинарники:
+
+- `bin/mapper_mean`, `bin/reducer_mean`
+- `bin/mapper_variance`, `bin/reducer_variance`
