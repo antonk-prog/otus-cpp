@@ -1,12 +1,37 @@
-#include "operations.h"
+ #include "operations.h"
 
-#include <map>
+#include <cstddef>
 
 namespace join
 {
 
 namespace
 {
+
+std::size_t countDigits(int id)
+{
+    std::size_t digits = id <= 0 ? 1 : 0;
+    for (int value = id; value != 0; value /= 10)
+    {
+        ++digits;
+    }
+    return digits;
+}
+
+std::size_t capacityFor(const Database::TableMap &table)
+{
+    std::size_t total = 0;
+    for (const auto &entry : table)
+    {
+        total += countDigits(entry.first) + entry.second.size() + 3;
+    }
+    return total;
+}
+
+std::size_t estimateCapacity(const Database::TableMap &a, const Database::TableMap &b)
+{
+    return capacityFor(a) + capacityFor(b) + sizeof("OK");
+}
 
 void appendRow(std::string &out,
                int id,
@@ -29,13 +54,14 @@ void appendRow(std::string &out,
 
 }
 
-std::string intersection(const Database::Snapshot &snapshot)
+std::string intersection(const Database::TableMap &a, const Database::TableMap &b)
 {
     std::string out;
-    auto left = snapshot.a.begin();
-    auto right = snapshot.b.begin();
+    out.reserve(estimateCapacity(a, b));
+    auto left = a.begin();
+    auto right = b.begin();
 
-    while (left != snapshot.a.end() && right != snapshot.b.end())
+    while (left != a.end() && right != b.end())
     {
         if (left->first < right->first)
         {
@@ -57,13 +83,14 @@ std::string intersection(const Database::Snapshot &snapshot)
     return out;
 }
 
-std::string symmetricDifference(const Database::Snapshot &snapshot)
+std::string symmetricDifference(const Database::TableMap &a, const Database::TableMap &b)
 {
     std::string out;
-    auto left = snapshot.a.begin();
-    auto right = snapshot.b.begin();
+    out.reserve(estimateCapacity(a, b));
+    auto left = a.begin();
+    auto right = b.begin();
 
-    while (left != snapshot.a.end() && right != snapshot.b.end())
+    while (left != a.end() && right != b.end())
     {
         if (left->first < right->first)
         {
@@ -82,11 +109,11 @@ std::string symmetricDifference(const Database::Snapshot &snapshot)
         }
     }
 
-    for (; left != snapshot.a.end(); ++left)
+    for (; left != a.end(); ++left)
     {
         appendRow(out, left->first, &left->second, nullptr);
     }
-    for (; right != snapshot.b.end(); ++right)
+    for (; right != b.end(); ++right)
     {
         appendRow(out, right->first, nullptr, &right->second);
     }

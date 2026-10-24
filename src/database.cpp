@@ -18,18 +18,12 @@ void Database::truncate(Table table)
     select(table).clear();
 }
 
-Database::Snapshot Database::snapshot() const
-{
-    std::shared_lock<std::shared_mutex> lock(mutex_);
-    return Snapshot{a_, b_};
-}
-
-std::map<int, std::string> &Database::select(Table table)
+Database::TableMap &Database::select(Table table)
 {
     return table == Table::A ? a_ : b_;
 }
 
-const std::map<int, std::string> &Database::select(Table table) const
+const Database::TableMap &Database::select(Table table) const
 {
     return table == Table::A ? a_ : b_;
 }

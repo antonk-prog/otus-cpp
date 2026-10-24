@@ -32,7 +32,7 @@ private:
     void onRead(const boost::system::error_code &error, std::size_t length);
 
     void processNext();
-    std::string handleSimple(const std::string &line);
+    std::string handleSimple(const std::vector<std::string> &tokens);
     void beginOperation(const std::string &command);
 
     void write(std::string response);

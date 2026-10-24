@@ -43,22 +43,18 @@ bool parseTable(const std::string &token, Database::Table &table)
 
 bool splitTokens(const std::string &line, std::vector<std::string> &tokens)
 {
-    std::size_t start = 0;
-    while (true)
+    std::size_t start = line.find_first_not_of(' ');
+    while (start != std::string::npos)
     {
         const std::size_t space = line.find(' ', start);
-        const std::string token = line.substr(start, space - start);
-        if (token.empty())
-        {
-            return false;
-        }
-        tokens.push_back(token);
+        tokens.push_back(line.substr(start, space - start));
         if (space == std::string::npos)
         {
-            return true;
+            break;
         }
-        start = space + 1;
+        start = line.find_first_not_of(' ', space);
     }
+    return !tokens.empty();
 }
 
 bool isOperation(const std::string &line)
@@ -122,16 +118,22 @@ void Session::onRead(const boost::system::error_code &error, std::size_t length)
 
     pending_.append(buffer_.data(), length);
 
-    std::size_t newline = std::string::npos;
-    while ((newline = pending_.find('\n')) != std::string::npos)
+    std::size_t start = 0;
+    for (std::size_t newline = pending_.find('\n', start);
+         newline != std::string::npos;
+         newline = pending_.find('\n', start))
     {
-        std::string line = pending_.substr(0, newline);
-        pending_.erase(0, newline + 1);
+        std::string line = pending_.substr(start, newline - start);
         if (!line.empty() && line.back() == '\r')
         {
             line.pop_back();
         }
         commands_.push_back(std::move(line));
+        start = newline + 1;
+    }
+    if (start > 0)
+    {
+        pending_.erase(0, start);
     }
 
     processNext();
@@ -157,19 +159,19 @@ void Session::processNext()
     std::string command = std::move(commands_.front());
     commands_.pop_front();
 
-    if (isOperation(command))
+    std::vector<std::string> tokens;
+    if (splitTokens(command, tokens) && tokens.size() == 1 && isOperation(tokens[0]))
     {
         beginOperation(command);
         return;
     }
 
-    write(handleSimple(command));
+    write(handleSimple(tokens));
 }
 
-std::string Session::handleSimple(const std::string &line)
+std::string Session::handleSimple(const std::vector<std::string> &tokens)
 {
-    std::vector<std::string> tokens;
-    if (!splitTokens(line, tokens) || tokens.empty())
+    if (tokens.empty())
     {
         return "ERR invalid command\n";
     }
@@ -231,10 +233,17 @@ void Session::beginOperation(const std::string &command)
             std::string response;
             try
             {
-                const Database::Snapshot snapshot = self->database_.snapshot();
                 response = command == "INTERSECTION"
-                               ? intersection(snapshot)
-                               : symmetricDifference(snapshot);
+                               ? self->database_.joinUnderSharedLock(
+                                     [](const Database::TableMap &a,
+                                        const Database::TableMap &b) {
+                                         return intersection(a, b);
+                                     })
+                               : self->database_.joinUnderSharedLock(
+                                     [](const Database::TableMap &a,
+                                        const Database::TableMap &b) {
+                                         return symmetricDifference(a, b);
+                                     });
             }
             catch (const std::exception &)
             {
