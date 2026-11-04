@@ -1,38 +1,27 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(join_server VERSION 1.0.0 LANGUAGES CXX)
+project(fashion_mnist VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Boost REQUIRED)
-find_package(Threads REQUIRED)
-
-add_executable(join_server
+add_executable(fashion_mnist
     src/main.cpp
-    src/server.cpp
-    src/session.cpp
-    src/database.cpp
-    src/operations.cpp
+    src/mlp.cpp
+    src/dataset.cpp
+    src/io.cpp
 )
 
-target_include_directories(join_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(join_server PRIVATE Boost::boost Threads::Threads)
-
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(join_server PRIVATE -Wall -Wextra)
+    target_compile_options(fashion_mnist PRIVATE -Wall -Wextra -O2)
 elseif(MSVC)
-    target_compile_options(join_server PRIVATE /W4)
+    target_compile_options(fashion_mnist PRIVATE /W4 /O2)
 endif()
 
-install(TARGETS join_server RUNTIME DESTINATION bin)
+find_package(Threads QUIET)
+if(Threads_FOUND)
+    target_link_libraries(fashion_mnist PRIVATE Threads::Threads)
+endif()
 
-set(CPACK_GENERATOR DEB)
-set(CPACK_PACKAGE_NAME join_server)
-set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
-set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
-set(CPACK_PACKAGE_CONTACT example@example.com)
-include(CPack)
+install(TARGETS fashion_mnist RUNTIME DESTINATION bin)
